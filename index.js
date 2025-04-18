@@ -6,11 +6,15 @@ const app = express();
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const cookieParser = require('cookie-parser');
 const jwt = require('jsonwebtoken');
+app.use(cors({
+  origin: [
+    "http://localhost:5173",
+    "https://hungerhero-ca978.web.app",
+    "https://hungerhero-ca978.firebaseapp.com"
+  ],
+  credentials: true
+}));
 
-app.use(cors(
-  {origin:'http://localhost:5173',
-  credentials:true}
-));
 app.use(express.json());
 app.use(cookieParser());
 
@@ -45,8 +49,8 @@ async function run() {
         const token = jwt.sign(user,process.env.ACCESS_TOKEN,{expiresIn:'24h'});
         res.cookie('token',token,{
           httpOnly:true,
-          secure:false,
-          sameSite:'strict',
+          secure: process.env.NODE_ENV === "production",
+          sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
 
         }).send({success:true,user})
         
@@ -55,7 +59,8 @@ async function run() {
       app.post('/logout',(req,res)=>{
         res.clearCookie('token',{
           httpOnly:true,
-          secure:false,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
         });
         res.send({message:"Logged out Successfully"});
       });
